@@ -1,5 +1,5 @@
 include_directories(${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/audio
+    #${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/audio
     ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/cdc
     ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/dfu
     ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/hid
@@ -27,10 +27,10 @@ target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/cd
 target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/dfu/usbd_dfu.c)
 target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/hid/usbd_hid.c)
 target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/msc/usbd_msc.c)
-# target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/mtp/usbd_mtp.c)
-target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/printer/usbd_printer.c)
+#target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/mtp/usbd_mtp.c)
+#target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/printer/usbd_printer.c)
 target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/video/usbd_video.c)
-# target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/wireless/usbd_rndis.c)
+target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/wireless/usbd_rndis.c)
 target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/core/usbd_core.c)
 
 add_subdirectory(device)
