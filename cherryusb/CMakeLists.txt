@@ -1,3 +1,5 @@
+set(cherry_dir ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/)
+
 include_directories(${CMAKE_CURRENT_LIST_DIR}
     #${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/audio
     ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/cdc
@@ -17,6 +19,12 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/demo
     ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/port/rp2040
     ${CMAKE_CURRENT_LIST_DIR}../../
+	#lwip directory:-
+	${LWIP_INCLUDE_DIRS}
+	#lwipopts.h ke liye
+	${CMAKE_CURRENT_LIST_DIR}/device/rndis_http_server/src
+	#arch/cc.h ke liye:-
+	${CMAKE_CURRENT_LIST_DIR}/device/rndis_http_server/common
 )
 
 

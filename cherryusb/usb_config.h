@@ -155,3 +155,7 @@
 // #define CONFIG_USB_EHCI_PORT_POWER
 
 #endif
+
+
+/* ================= enabling the lwip ================ */
+#define CONFIG_USBDEV_RNDIS_USING_LWIP 1

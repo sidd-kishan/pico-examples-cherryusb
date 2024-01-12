@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 set(PICO_BOARD pico_w)
 include(pico-sdk/pico_sdk_init.cmake)
 
-include(pico_extras_import_optional.cmake)
+#include(pico_extras_import_optional.cmake)
 
 project(pico_examples C CXX ASM)
 set(CMAKE_C_STANDARD 11)
@@ -15,10 +15,18 @@ endif()
 
 set(PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
 
+set(PICO_LWIP_CORE_CODE ${PICO_EXAMPLES_PATH}/pico-sdk/lib/lwip/src/core/)
 # Initialize the SDK
 pico_sdk_init()
 
 include(example_auto_set_url.cmake)
+
+set(LWIP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/lib/lwip)
+set (LWIP_INCLUDE_DIRS
+    "${LWIP_DIR}/src/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
 # Add blink example
 #add_subdirectory(blink)
 

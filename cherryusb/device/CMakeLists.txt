@@ -8,4 +8,5 @@ add_subdirectory(hid_kbd)
 add_subdirectory(hid_mouse)
 add_subdirectory(msc_ram)
 #add_subdirectory(uvc)
+add_subdirectory(rndis_http_server)
 
