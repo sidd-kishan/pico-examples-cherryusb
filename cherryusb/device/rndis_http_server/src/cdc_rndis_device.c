@@ -107,7 +107,6 @@ static const uint8_t cdc_descriptor[] = {
     0x00
 };
 
-static uint8_t rndis_mac[6] = { 0x20, 0x89, 0x84, 0x6A, 0x96, 0xAA };
 
 void usbd_rndis_data_recv_done(void)
 {
@@ -141,10 +140,10 @@ void usbd_event_handler(uint8_t event)
 struct usbd_interface intf0;
 struct usbd_interface intf1;
 
-void cdc_rndis_init(void)
+void cdc_rndis_init(uint8_t mac[])
 {
     usbd_desc_register(cdc_descriptor);
-    usbd_add_interface(usbd_rndis_init_intf(&intf0, CDC_OUT_EP, CDC_IN_EP, CDC_INT_EP, rndis_mac));
-    usbd_add_interface(usbd_rndis_init_intf(&intf1, CDC_OUT_EP, CDC_IN_EP, CDC_INT_EP, rndis_mac));
+    usbd_add_interface(usbd_rndis_init_intf(&intf0, CDC_OUT_EP, CDC_IN_EP, CDC_INT_EP, mac));
+    usbd_add_interface(usbd_rndis_init_intf(&intf1, CDC_OUT_EP, CDC_IN_EP, CDC_INT_EP, mac));
     usbd_initialize();
 }

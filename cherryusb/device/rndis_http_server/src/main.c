@@ -25,6 +25,7 @@
 #include "usbd_core.h"
 #include "usbd_rndis.h"
 #include "cdc_rndis_device.h"
+#include "pico/multicore.h"
 
 /* Macro Definition */
 #define LWIP_SYS_TIME_MS 1
@@ -72,31 +73,6 @@ void sys_timer_callback(void)
 uint32_t sys_now(void)
 {
     return sys_tick;
-}
-
-int main(void)
-{
-    
-    printf("cherry usb rndis device sample.\n");
-
-    cdc_rndis_init();
-
-    user_init_lwip();
-    while (!netif_is_up(&netif_data)) {
-        ;
-    }
-    while (dhserv_init(&dhcp_config) != ERR_OK) {
-        ;
-    }
-    while (dnserv_init(IP_ADDR_ANY, 53, dns_query_proc) != ERR_OK) {
-        ;
-    }
-    httpd_init();
-
-    while (1) {
-        lwip_service_traffic();
-    }
-    return 0;
 }
 
 static void user_init_lwip(void)
@@ -163,3 +139,39 @@ static bool dns_query_proc(const char *name, ip_addr_t *addr)
     }
     return false;
 }
+
+void core1(){
+    user_init_lwip();
+    while (!netif_is_up(&netif_data)) {
+        ;
+    }
+    while (dhserv_init(&dhcp_config) != ERR_OK) {
+        ;
+    }
+    while (dnserv_init(IP_ADDR_ANY, 53, dns_query_proc) != ERR_OK) {
+        ;
+    }
+    httpd_init();
+
+    while (1) {
+        lwip_service_traffic();
+    }
+}
+
+int main(void)
+{
+    
+    printf("cherry usb rndis device sample.\n");
+	
+	uint8_t rndis_mac[6] = { 0x20, 0x89, 0x84, 0x6A, 0x96, 0xAA };
+
+    cdc_rndis_init(rndis_mac);
+	
+	multicore_launch_core1(core1);
+	
+	while (1) {
+    }
+
+    return 0;
+}
+
