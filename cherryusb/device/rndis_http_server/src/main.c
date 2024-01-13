@@ -26,6 +26,36 @@
 #include "usbd_rndis.h"
 #include "cdc_rndis_device.h"
 #include "pico/multicore.h"
+#include "pico/cyw43_arch.h"
+#include "pico/stdlib.h"
+
+struct pbuf *out_pkt;
+volatile bool link_up = false;
+static volatile absolute_time_t next_wifi_try;
+
+void cyw43_cb_tcpip_set_link_up(cyw43_t *self, int itf) {
+    if(!link_up){
+		link_up = true;
+		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, link_up);
+	}
+}
+
+void cyw43_cb_tcpip_set_link_down(cyw43_t *self, int itf) {
+    if(link_up){
+		link_up = false;
+		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, link_up);
+	}
+}
+
+void cyw43_cb_process_ethernet(void *cb_data, int itf, size_t len, const uint8_t *buf) {
+	out_pkt = pbuf_alloc(PBUF_RAW, len, PBUF_POOL);
+	//memcpy(out_pkt->payload, buf, len);
+	pbuf_take(out_pkt, buf, len);
+	int ret = usbd_rndis_eth_tx(out_pkt);
+	pbuf_free(out_pkt);
+	out_pkt = NULL;
+}
+
 
 /* Macro Definition */
 #define LWIP_SYS_TIME_MS 1
@@ -122,12 +152,9 @@ static void lwip_service_traffic(void)
 
     if (p != NULL) {
         /* entry point to the LwIP stack */
-        err = netif_data.input(p, &netif_data);
-
-        if (err != ERR_OK) {
-            LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: IP input error\n"));
-            pbuf_free(p);
-        }
+        int eth_frame_send_success=cyw43_send_ethernet(&cyw43_state, CYW43_ITF_STA, p->tot_len, (void*)p, true);
+	    //err = netif_data.input(p, &netif_data);
+		pbuf_free(p);
     }
 }
 
@@ -160,16 +187,25 @@ void core1(){
 
 int main(void)
 {
-    
-    printf("cherry usb rndis device sample.\n");
-	
+    set_sys_clock_khz(200000, true);
 	uint8_t rndis_mac[6] = { 0x20, 0x89, 0x84, 0x6A, 0x96, 0xAA };
+	cyw43_arch_init_with_country(CYW43_COUNTRY_INDIA);
+    cyw43_arch_enable_sta_mode();
+	cyw43_wifi_pm(&cyw43_state, cyw43_pm_value(CYW43_NO_POWERSAVE_MODE, 20, 1, 1, 1));
+	cyw43_hal_get_mac(0, rndis_mac);
 
     cdc_rndis_init(rndis_mac);
 	
 	multicore_launch_core1(core1);
 	
 	while (1) {
+		if (!link_up) {
+            if (absolute_time_diff_us(get_absolute_time(), next_wifi_try) < 0) {
+                cyw43_arch_wifi_connect_async("ssid", "password", CYW43_AUTH_WPA2_AES_PSK);
+                next_wifi_try = make_timeout_time_ms(10000);
+            }
+        } else {
+		}
     }
 
     return 0;

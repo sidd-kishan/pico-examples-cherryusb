@@ -19,5 +19,5 @@ include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CM
 add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c ${CMAKE_CURRENT_SOURCE_DIR}/common/dhcp-server/dhserver.c ${CMAKE_CURRENT_SOURCE_DIR}/common/dns-server/dnserver.c ${CMAKE_CURRENT_SOURCE_DIR}/src/cdc_rndis_device.c)
 
 
-target_link_libraries(${PROJECT_NAME} PRIVATE pico_stdlib cherryusblib hardware_resets hardware_irq pico_lwip pico_lwip_http pico_multicore)
+target_link_libraries(${PROJECT_NAME} PRIVATE pico_stdlib cherryusblib hardware_resets hardware_irq pico_lwip pico_lwip_http pico_multicore  pico_cyw43_arch_none)
 pico_add_extra_outputs(${PROJECT_NAME})
