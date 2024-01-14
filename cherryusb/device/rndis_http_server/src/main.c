@@ -52,6 +52,9 @@ void cyw43_cb_process_ethernet(void *cb_data, int itf, size_t len, const uint8_t
 	//memcpy(out_pkt->payload, buf, len);
 	pbuf_take(out_pkt, buf, len);
 	int ret = usbd_rndis_eth_tx(out_pkt);
+	if (0 != ret) {
+        ret = ERR_BUF;
+    }
 	pbuf_free(out_pkt);
 	out_pkt = NULL;
 }
@@ -67,22 +70,6 @@ static uint8_t hwaddr[6]  = { 0x20, 0x89, 0x84, 0x6A, 0x96, 00 };
 static uint8_t ipaddr[4]  = { 192, 168, 7, 1 };
 static uint8_t netmask[4] = { 255, 255, 255, 0 };
 static uint8_t gateway[4] = { 0, 0, 0, 0 };
-
-static dhcp_entry_t entries[NUM_DHCP_ENTRY] = {
-    /* mac    ip address        subnet mask        lease time */
-    { { 0 }, { 192, 168, 7, 2 }, { 255, 255, 255, 0 }, 24 * 60 * 60 },
-    { { 0 }, { 192, 168, 7, 3 }, { 255, 255, 255, 0 }, 24 * 60 * 60 },
-    { { 0 }, { 192, 168, 7, 4 }, { 255, 255, 255, 0 }, 24 * 60 * 60 }
-};
-
-static dhcp_config_t dhcp_config = {
-    { 192, 168, 7, 1 }, /* server address */
-    67,                 /* port */
-    { 192, 168, 7, 1 }, /* dns server */
-    "hpm",              /* dns suffix */
-    NUM_DHCP_ENTRY,     /* num entry */
-    entries             /* entries */
-};
 
 static uint32_t     sys_tick;
 static struct netif netif_data;
@@ -158,30 +145,15 @@ static void lwip_service_traffic(void)
     }
 }
 
-static bool dns_query_proc(const char *name, ip_addr_t *addr)
-{
-    if (strcmp(name, "rndis.hpm") == 0 || strcmp(name, "www.rndis.hpm") == 0) {
-        addr->addr = *(uint32_t *)ipaddr;
-        return true;
-    }
-    return false;
-}
-
 void core1(){
     user_init_lwip();
     while (!netif_is_up(&netif_data)) {
         ;
     }
-    while (dhserv_init(&dhcp_config) != ERR_OK) {
-        ;
-    }
-    while (dnserv_init(IP_ADDR_ANY, 53, dns_query_proc) != ERR_OK) {
-        ;
-    }
     httpd_init();
 
     while (1) {
-        lwip_service_traffic();
+        //lwip_service_traffic();
     }
 }
 
@@ -205,6 +177,14 @@ int main(void)
                 next_wifi_try = make_timeout_time_ms(10000);
             }
         } else {
+			struct pbuf *p;
+			p = usbd_rndis_eth_rx();
+			if (p != NULL) {
+				/* entry point to the LwIP stack */
+				int eth_frame_send_success=cyw43_send_ethernet(&cyw43_state, CYW43_ITF_STA, p->tot_len, (void*)p, true);
+				//err = netif_data.input(p, &netif_data);
+				pbuf_free(p);
+			}
 		}
     }
 
