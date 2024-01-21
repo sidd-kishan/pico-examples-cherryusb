@@ -147,12 +147,23 @@ static void lwip_service_traffic(void)
 
 void core1(){
     user_init_lwip();
-    while (!netif_is_up(&netif_data)) {
-        ;
-    }
-    httpd_init();
+    //while (!netif_is_up(&netif_data)) {
+    //    ;
+    //}
+    //httpd_init();
 
     while (1) {
+		if (!link_up){
+			struct pbuf *p;
+			p = usbd_rndis_eth_rx();
+			if (p != NULL) {
+				/* entry point to the LwIP stack */
+				int eth_frame_send_success=cyw43_send_ethernet(&cyw43_state, CYW43_ITF_STA, p->tot_len, (void*)p, true);
+				//err = netif_data.input(p, &netif_data);
+				pbuf_free(p);
+				p=NULL;
+			}
+		}
         //lwip_service_traffic();
     }
 }
@@ -184,6 +195,7 @@ int main(void)
 				int eth_frame_send_success=cyw43_send_ethernet(&cyw43_state, CYW43_ITF_STA, p->tot_len, (void*)p, true);
 				//err = netif_data.input(p, &netif_data);
 				pbuf_free(p);
+				p=NULL;
 			}
 		}
     }
