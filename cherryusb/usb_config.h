@@ -98,6 +98,11 @@
 #define CONFIG_USBDEV_RNDIS_VENDOR_DESC "CherryUSB"
 #endif
 
+#ifndef CONFIG_USBDEV_MSC_MAX_BUFSIZE
+#define CONFIG_USBDEV_MSC_MAX_BUFSIZE 512
+#endif
+
+
 /* ================ USB HOST Stack Configuration ================== */
 
 #define CONFIG_USBHOST_MAX_RHPORTS          1
