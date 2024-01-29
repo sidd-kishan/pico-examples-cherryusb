@@ -122,7 +122,7 @@ static const uint8_t cdc_descriptor[] = {
     0x00
 };
 
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[3][2048];
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[3][8];
 
 
 volatile bool ep_tx_busy_flag = false;
@@ -146,9 +146,9 @@ void usbd_event_handler(uint8_t event)
         break;
     case USBD_EVENT_CONFIGURED:
 		/* setup first out ep read transfer */
-            usbd_ep_start_read(CDC_OUT_EP2, read_buffer[0], 2048);
-            usbd_ep_start_read(CDC_OUT_EP3, read_buffer[1], 2048);
-            usbd_ep_start_read(CDC_OUT_EP4, read_buffer[2], 2048);
+            usbd_ep_start_read(CDC_OUT_EP2, read_buffer[0], 8);
+            usbd_ep_start_read(CDC_OUT_EP3, read_buffer[1], 8);
+            usbd_ep_start_read(CDC_OUT_EP4, read_buffer[2], 8);
         break;
     case USBD_EVENT_SET_REMOTE_WAKEUP:
         break;
@@ -164,9 +164,14 @@ void usbd_cdc_acm_bulk_out(uint8_t ep, uint32_t nbytes)
 {
     //USB_LOG_RAW("actual out len:%d\r\n", nbytes);
     /* setup next out ep read transfer */
-    usbd_ep_start_read(CDC_OUT_EP2, read_buffer[0], 2048);
-	usbd_ep_start_read(CDC_OUT_EP3, read_buffer[1], 2048);
-	usbd_ep_start_read(CDC_OUT_EP4, read_buffer[2], 2048);
+	//if(nbytes<2048){
+	if(ep == CDC_OUT_EP2)
+		usbd_ep_start_read(CDC_OUT_EP2, read_buffer[0], nbytes);
+	else if(ep == CDC_OUT_EP3)
+		usbd_ep_start_read(CDC_OUT_EP3, read_buffer[1], nbytes);
+	else
+		usbd_ep_start_read(CDC_OUT_EP4, read_buffer[2], nbytes);
+	//}
 }
 
 void usbd_cdc_acm_bulk_in(uint8_t ep, uint32_t nbytes)
@@ -175,7 +180,7 @@ void usbd_cdc_acm_bulk_in(uint8_t ep, uint32_t nbytes)
 
     if ((nbytes % CDC_MAX_MPS) == 0 && nbytes) {
         /* send zlp */
-        usbd_ep_start_write(CDC_IN_EP2, NULL, 0);
+        usbd_ep_start_write(ep, NULL, 0);
     } else {
         ep_tx_busy_flag = false;
     }

@@ -32,6 +32,7 @@
 struct pbuf *out_pkt;
 volatile bool link_up = false;
 static volatile absolute_time_t next_wifi_try;
+static volatile absolute_time_t comm_manager;
 
 void cyw43_cb_tcpip_set_link_up(cyw43_t *self, int itf) {
     if(!link_up){
@@ -155,8 +156,12 @@ void core1(){
 	//USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30 };
 
     while (1) {
-		cdc_acm_data_send_with_dtr(2,read_buffer[0],10);
-		cdc_acm_data_send_with_dtr(3,read_buffer[1],10);
+		cdc_acm_data_send_with_dtr(2,read_buffer[0],8);
+		cdc_acm_data_send_with_dtr(3,read_buffer[1],8);
+		//cdc_acm_data_send_with_dtr(2,"\n\r",2);
+		//cdc_acm_data_send_with_dtr(3,"\n\r",2);
+		absolute_time_t start_time = get_absolute_time ();
+		while (absolute_time_diff_us (start_time, get_absolute_time()) < 50000);
     }
 }
 
