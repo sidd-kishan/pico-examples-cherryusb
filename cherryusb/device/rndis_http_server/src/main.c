@@ -154,11 +154,10 @@ void core1(){
     //}
     //httpd_init();
 	//USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30 };
-
     while (1) {
-		cdc_acm_data_send_with_dtr(2,read_buffer[0],2048);
-		cdc_acm_data_send_with_dtr(3,read_buffer[1],2048);
-		cdc_acm_data_send_with_dtr(4,read_buffer[2],2048);
+		cdc_acm_data_send_with_dtr(2,read_queue[0].buffer,read_queue[0].tail);
+		cdc_acm_data_send_with_dtr(3,read_queue[1].buffer,read_queue[1].tail);
+		cdc_acm_data_send_with_dtr(4,read_queue[2].buffer,read_queue[2].tail);
 		absolute_time_t start_time = get_absolute_time ();
 		while (absolute_time_diff_us (start_time, get_absolute_time()) < 1000000);
     }

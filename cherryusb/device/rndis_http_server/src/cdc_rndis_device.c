@@ -123,6 +123,12 @@ static const uint8_t cdc_descriptor[] = {
 };
 
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t read_buffer[3][2048];
+struct circular_queue {
+    uint8_t buffer[2048];
+    uint32_t tail;
+};
+
+struct circular_queue read_queue[3];
 
 
 volatile bool ep_tx_busy_flag = false;
@@ -167,14 +173,26 @@ void usbd_cdc_acm_bulk_out(uint8_t ep, uint32_t nbytes)
 	//if(nbytes<2048){
 	if(ep == CDC_OUT_EP2){
 		usbd_ep_start_read(CDC_IN_EP2, read_buffer[0], 2048);
+		for (int i = 0; i < nbytes; i++) {
+			read_queue[0].buffer[read_queue[0].tail] = read_buffer[0][i];
+			read_queue[0].tail = (read_queue[0].tail + 1) % 2048;
+		}
 		usbd_ep_start_write(CDC_IN_EP2, read_buffer[0], nbytes);
 	}
 	else if(ep == CDC_OUT_EP3){
 		usbd_ep_start_read(CDC_OUT_EP3, read_buffer[1], 2048);
+		for (int i = 0; i < nbytes; i++) {
+			read_queue[1].buffer[read_queue[1].tail] = read_buffer[1][i];
+			read_queue[1].tail = (read_queue[1].tail + 1) % 2048;
+		}
 		usbd_ep_start_write(CDC_IN_EP3, read_buffer[1], nbytes);
 	}
 	else{
 		usbd_ep_start_read(CDC_OUT_EP4, read_buffer[2], 2048);
+		for (int i = 0; i < nbytes; i++) {
+			read_queue[2].buffer[read_queue[2].tail] = read_buffer[2][i];
+			read_queue[2].tail = (read_queue[2].tail + 1) % 2048;
+		}
 		usbd_ep_start_write(CDC_IN_EP4, read_buffer[2], nbytes);
 	}
 }
@@ -253,7 +271,7 @@ void cdc_rndis_init(uint8_t mac[])
     usbd_initialize();
 }
 
-volatile uint8_t dtr_enable = 1;
+volatile uint8_t dtr_enable = 0;
 
 void usbd_cdc_acm_set_dtr(uint8_t intf, bool dtr)
 {
