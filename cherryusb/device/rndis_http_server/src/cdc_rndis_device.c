@@ -172,7 +172,7 @@ void usbd_cdc_acm_bulk_out(uint8_t ep, uint32_t nbytes)
     /* setup next out ep read transfer */
 	//if(nbytes<2048){
 	if(ep == CDC_OUT_EP2){
-		usbd_ep_start_read(CDC_IN_EP2, read_buffer[0], 2048);
+		usbd_ep_start_read(CDC_OUT_EP2, read_buffer[0], 2048);
 		for (int i = 0; i < nbytes; i++) {
 			read_queue[0].buffer[read_queue[0].tail] = read_buffer[0][i];
 			read_queue[0].tail = (read_queue[0].tail + 1) % 2048;
