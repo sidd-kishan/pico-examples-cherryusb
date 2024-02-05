@@ -43,7 +43,7 @@ void core1(){
 	absolute_time_t scan_time = nil_time;
     bool scan_in_progress = false;
     while(true) {
-        if (absolute_time_diff_us(get_absolute_time(), scan_time) < 0) {
+        /*if (absolute_time_diff_us(get_absolute_time(), scan_time) < 0) {
             if (!scan_in_progress) {
                 cyw43_wifi_scan_options_t scan_options = {0};
                 int err = cyw43_wifi_scan(&cyw43_state, &scan_options, NULL, scan_result);
@@ -58,13 +58,24 @@ void core1(){
                 scan_time = make_timeout_time_ms(5000); // wait 5s and scan again
                 scan_in_progress = false; 
             }
-        }
+        }*/
+		read_queue[0].buffer[0]='\r';
+		read_queue[0].buffer[1]='\n';
 		cdc_acm_data_send_with_dtr(2,read_queue[0].buffer,read_queue[0].tail);
-		//read_queue[0].tail=0;
+		read_queue[0].tail=0;
+		
+		
+		read_queue[1].buffer[0]='\r';
+		read_queue[1].buffer[1]='\n';
 		cdc_acm_data_send_with_dtr(3,read_queue[1].buffer,read_queue[1].tail);
-		//read_queue[0].tail=0;
+		read_queue[1].tail=0;
+		
+		
+		read_queue[2].buffer[0]='\r';
+		read_queue[2].buffer[1]='\n';
 		cdc_acm_data_send_with_dtr(4,read_queue[2].buffer,read_queue[2].tail);
-		//read_queue[0].tail=0;
+		read_queue[2].tail=0;
+		
 		absolute_time_t start_time = get_absolute_time ();
 		while (absolute_time_diff_us (start_time, get_absolute_time()) < 1000000);
     }
