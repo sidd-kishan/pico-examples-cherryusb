@@ -295,6 +295,5 @@ void cdc_acm_data_send_with_dtr(int ep, uint8_t write_buffer[], int len)
 		}
         while (ep_tx_busy_flag) {
         }
-		memset(write_buffer, 0, len*sizeof(char));
     }
 }

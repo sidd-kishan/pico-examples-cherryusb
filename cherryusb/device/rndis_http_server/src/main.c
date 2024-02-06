@@ -31,7 +31,14 @@ static int scan_result(void *env, const cyw43_ev_scan_result_t *result) {
     }
     return 0;
 }
-
+void printline(int cdc,char string[],int len){
+	char buf[2048];
+	//memcpy(buf,"\r\n",2);
+	//memcpy(buf+2,string,len);
+	//memcpy(buf+2+len,"\r\n\r\n\0",5);
+	sprintf(buf,"\r\n%s\r\n\0",string);
+	cdc_acm_data_send_with_dtr(cdc,(uint8_t *)buf,strlen(buf));
+}
 void core1(){
     //user_init_lwip();
     lwip_init();
@@ -59,22 +66,13 @@ void core1(){
                 scan_in_progress = false; 
             }
         }*/
-		read_queue[0].buffer[0]='\r';
-		read_queue[0].buffer[1]='\n';
-		cdc_acm_data_send_with_dtr(2,read_queue[0].buffer,read_queue[0].tail);
+		printline(2,(char *)read_queue[0].buffer,read_queue[0].tail);
 		read_queue[0].tail=0;
-		
-		
-		read_queue[1].buffer[0]='\r';
-		read_queue[1].buffer[1]='\n';
-		cdc_acm_data_send_with_dtr(3,read_queue[1].buffer,read_queue[1].tail);
+		printline(3,(char *)read_queue[1].buffer,read_queue[1].tail);
 		read_queue[1].tail=0;
-		
-		
-		read_queue[2].buffer[0]='\r';
-		read_queue[2].buffer[1]='\n';
-		cdc_acm_data_send_with_dtr(4,read_queue[2].buffer,read_queue[2].tail);
+		printline(4,(char *)read_queue[2].buffer,read_queue[2].tail);
 		read_queue[2].tail=0;
+		
 		
 		absolute_time_t start_time = get_absolute_time ();
 		while (absolute_time_diff_us (start_time, get_absolute_time()) < 1000000);
