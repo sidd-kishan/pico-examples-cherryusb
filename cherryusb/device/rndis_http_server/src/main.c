@@ -17,7 +17,7 @@
 
 static volatile absolute_time_t next_wifi_try;
 static volatile absolute_time_t comm_manager;
-char connect_ssid[50], connect_password[80];
+char connect_ssid[190], connect_ssid_decode[95], connect_password[190], connect_password_decode[95];
 int connect_sec,connect_config;
 
 void printline(int cdc,char string[],int len){
@@ -27,6 +27,34 @@ void printline(int cdc,char string[],int len){
 	//memcpy(buf+2+len,"\r\n\r\n\0",5);
 	sprintf(buf,"\r\n%s\r\n\0",string);
 	cdc_acm_data_send_with_dtr(cdc,(uint8_t *)buf,strlen(buf));
+}
+
+int hexCharToDecimal(char hexChar) {
+    if (hexChar >= '0' && hexChar <= '9') {
+        return hexChar - '0';
+    } else if (hexChar >= 'a' && hexChar <= 'f') {
+        return hexChar - 'a' + 10;
+    } else if (hexChar >= 'A' && hexChar <= 'F') {
+        return hexChar - 'A' + 10;
+    }
+    return -1; // Invalid hex character
+}
+
+// Function to decode a hex-encoded string
+void hexDecode(const char* input, char* output) {
+    int len = strlen(input);
+
+    for (int i = 0, j = 0; i < len; i += 2, j++) {
+        int highNibble = hexCharToDecimal(input[i]);
+        int lowNibble = hexCharToDecimal(input[i + 1]);
+
+        if (highNibble == -1 || lowNibble == -1) {
+            fprintf(stderr, "Error: Invalid hex characters in the input.\n");
+            return;
+        }
+
+        output[j] = (char)((highNibble << 4) | lowNibble);
+    }
 }
 
 static int scan_result(void *env, const cyw43_ev_scan_result_t *result) {
@@ -119,8 +147,10 @@ int main(void)
 				//connect_buf_len = sprintf(connect_buf, "ssid: %*s password: %*s sec: %d", connect_ssid, connect_password, connect_sec);
 				//connect_buf[connect_buf_len+1]=' ';
 				printline(2,"----------",10);
-				printline(2,connect_ssid,strlen(connect_ssid));
-				printline(2,connect_password,strlen(connect_password));
+				hexDecode(connect_ssid, connect_ssid_decode);
+				printline(2,connect_ssid_decode,strlen(connect_ssid_decode));
+				hexDecode(connect_password, connect_password_decode);
+				printline(2,connect_password_decode,strlen(connect_password_decode));
 				printline(2,"----------",10);
                 next_wifi_try = make_timeout_time_ms(10000);
             }
