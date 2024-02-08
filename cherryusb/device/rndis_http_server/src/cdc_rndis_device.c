@@ -255,7 +255,7 @@ void cdc_rndis_init(uint8_t mac[])
     usbd_add_interface((struct usbd_interface *)usbd_rndis_init_intf(&intf1, CDC_OUT_EP, CDC_IN_EP, CDC_INT_EP, mac));
 	
 	usbd_add_interface((struct usbd_interface *)usbd_cdc_acm_init_intf(&intf2));
-    usbd_add_interface((struct usbd_interface *)(struct usbd_interface *)usbd_cdc_acm_init_intf(&intf3));
+    usbd_add_interface((struct usbd_interface *)usbd_cdc_acm_init_intf(&intf3));
     usbd_add_endpoint(&cdc_out_ep2);
     usbd_add_endpoint(&cdc_in_ep2);
 
