@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<!-- saved from url=(0038)https://whatwebcando.today/serial.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  <meta content="Can I rely on the Web Platform features to build my app? An overview of the device integration HTML5 APIs" name="description"> <meta content="width=device-width,initial-scale=1" name="viewport"> <!--<base href="/">--><base href="."> <link href="./wifi_contorl_panel_files/main.4188134553.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/index.1e803991.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/Article.15023632.css" rel="stylesheet"><link rel="stylesheet" href="./wifi_contorl_panel_files/[feature].html.d41938c2.css"><link rel="stylesheet" href="./wifi_contorl_panel_files/prism.3fa19f60.css"><h3>Support in your browser</h3> <div><div class="feature-test bg-success svelte-126eukc"><div class="pull-left svelte-126eukc"><code class="svelte-126eukc">navigator​.serial</code></div> <div class="pull-right svelte-126eukc">️✔ Supported</div> </div></div></section> <section><h3>Live Demo</h3> <div class="demo-placeholder svelte-126eukc"><style>
+            
+            
+          </style> <button id="connectButton">Connect via Serial Port</button>
+
+<div id="target">
+</div>
+</div> </section>  </article></main>  </div>  <script id="oneOffScript" type="text/javascript">
+let database_of_wifi_scan = {};
+
+function renderTable(dataObject) {
+    const targetDiv = document.getElementById('target');
+
+    // Create table element
+    const table = document.createElement('table');
+    table.border = '1';
+
+    // Create table header
+    const thead = document.createElement('thead');
+    const headerRow = thead.insertRow();
+    headerRow.innerHTML = '<th>SSID</th><th>RSSI</th><th>Channel</th><th>MAC</th><th>Security</th>';
+    table.appendChild(thead);
+
+    // Create table body
+    const tbody = document.createElement('tbody');
+
+    // Iterate through dataObject and create rows
+    for (const ssid in dataObject) {
+        const rowData = dataObject[ssid];
+        const row = tbody.insertRow();
+        row.innerHTML = `<td>${ssid}</td><td>${rowData.rssi.join(', ')}</td><td>${rowData.chan}</td><td>${rowData.mac.join(', ')}</td><td>${rowData.sec}</td>`;
+    }
+
+    table.appendChild(tbody);
+
+    // Replace content of the targetDiv with the created table
+    targetDiv.innerHTML = '';
+    targetDiv.appendChild(table);
+}
+
+
+function createOrUpdateObject(existingObject, extractedValues) {
+    // Check if the ssid already exists in the object
+    if (existingObject.hasOwnProperty(extractedValues.ssid)) {
+        // If ssid exists, update the existing entry
+        existingObject[extractedValues.ssid].rssi.push(extractedValues.rssi);
+        existingObject[extractedValues.ssid].mac.push(extractedValues.mac);
+    } else {
+        // If ssid doesn't exist, create a new entry
+        existingObject[extractedValues.ssid] = {
+            rssi: [extractedValues.rssi],
+            chan: extractedValues.chan,
+            mac: [extractedValues.mac],
+            sec: extractedValues.sec
+        };
+    }
+}
+
+function extractValues(inputString) {
+    // Define a regular expression pattern to extract values
+    const pattern = /ssid:\s*([\w\s]+)\s*rssi:\s*(-?\d+)\s*chan:\s*(\d+)\s*mac:\s*([\w:]+)\s*sec:\s*(\d+)/;
+
+    // Use the regular expression to match the pattern in the input string
+    const match = inputString.match(pattern);
+
+    // Check if the match is found
+    if (match) {
+        // Extract values from the matched groups
+        const ssid = match[1].trim();
+        const rssi = parseInt(match[2], 10);
+        const chan = parseInt(match[3], 10);
+        const mac = match[4];
+        const sec = parseInt(match[5], 10);
+
+        // Return an object with extracted values
+        return {
+            ssid,
+            rssi,
+            chan,
+            mac,
+            sec
+        };
+    } else {
+        // If no match is found, return null or handle accordingly
+        return null;
+    }
+}
+
+document.getElementById('connectButton').addEventListener('click', () => {
+  if (navigator.serial) {
+    connectSerial();
+  } else {
+    alert('Web Serial API not supported.');
+  }
+});
+
+async function connectSerial() {
+  const log = document.getElementById('target');
+    
+  try {
+	const filter = { usbVendorId: 0xEFFF, usbProductId: 0xEFFF};
+    const port = await navigator.serial.requestPort({ filters: [filter] });
+    await port.open({ baudRate: 115200 });
+    const decoder = new TextDecoderStream();
+    
+    port.readable.pipeTo(decoder.writable);
+
+    const inputStream = decoder.readable;
+    const reader = inputStream.getReader();
+    const encoder = new TextEncoder();
+	const writer = port.writable.getWriter();
+	await writer.write(encoder.encode("68656c6c6f2020202020202020202020202020776f726c640d0a2020202020202020202066726f6d0d0a4161797573682020202020202020202044656f 68656c6c6f2020202020202020202020202020776f726c640d0a2020202020202020202066726f6d0d0a4161797573682020202020202020202044656f 10000 7"));
+	writer.releaseLock();
+    while (true) {
+      const { value, done } = await reader.read();
+      if (value) {
+		var extractedValues = extractValues(value)
+		if(extractedValues){
+			log.innerHTML += extractedValues.ssid + '<br>';
+			createOrUpdateObject(database_of_wifi_scan, extractedValues);
+			renderTable(database_of_wifi_scan);
+		}
+      }
+      if (done) {
+        console.log('[readLoop] DONE', done);
+        reader.releaseLock();
+        break;
+      }
+    }
+  
+  } catch (error) {
+    log.innerHTML = error;
+  }
+}</script></body></html>

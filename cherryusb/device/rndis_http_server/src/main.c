@@ -17,8 +17,7 @@
 
 static volatile absolute_time_t next_wifi_try;
 static volatile absolute_time_t comm_manager;
-char connect_ssid[190], connect_ssid_decode[95], connect_password[190], connect_password_decode[95];
-int connect_sec,connect_config;
+char connect_ssid[190], connect_ssid_decode[95], connect_password[190], connect_password_decode[95], retry_ms[6], enc_type[1];
 
 void printline(int cdc,char string[],int len){
 	char buf[2048];
@@ -57,13 +56,20 @@ void hexDecode(const char* input, char* output) {
     }
 }
 
+void hex_encode(const uint8_t* input, char* output, size_t input_length) {
+	for (size_t i = 0; i < input_length; ++i, output += 2) {
+        sprintf(output, "%02x", input[i]);
+    }
+}
+
 static int scan_result(void *env, const cyw43_ev_scan_result_t *result) {
-	char wlan_scan_buffer[120];
+	char wlan_scan_buffer[185],hex_encoded_ssid[65];
     if (result) { 
-        int len = sprintf(wlan_scan_buffer, "ssid: %-32s rssi: %4d chan: %3d mac: %02x:%02x:%02x:%02x:%02x:%02x sec: %u test-ssid-sec: %d",
-            result->ssid, result->rssi, result->channel,
+		hex_encode(result->ssid, hex_encoded_ssid, 32);
+        int len = sprintf(wlan_scan_buffer, "ssid: %-64s rssi: %4d chan: %3d mac: %02x:%02x:%02x:%02x:%02x:%02x sec: %u",
+            hex_encoded_ssid, result->rssi, result->channel,
             result->bssid[0], result->bssid[1], result->bssid[2], result->bssid[3], result->bssid[4], result->bssid[5],
-            result->auth_mode, CYW43_AUTH_WPA2_AES_PSK);
+            result->auth_mode);
 		//memcpy(read_queue[0].buffer,wlan_scan_buffer,100);
 		//read_queue[0].tail=len;
 		printline(2,wlan_scan_buffer,len);
@@ -82,21 +88,28 @@ void core1(){
 		//memcpy(connect_buf,(char *)read_queue[0].buffer,read_queue[0].tail);
 		//read_queue[0].tail=0;
 		//sscanf(connect_buf, "ssid: %*s password: %*s sec: %d", connect_ssid, connect_password, &connect_sec);
-		connect_config=0;
-		for(int i=0,j=0;i<read_queue[0].tail;i++){
-			if(read_queue[0].buffer[i]==' '){
-				connect_config+=1;
-				j=0;
+		if(read_queue[0].tail>0){
+			memset(connect_ssid, 0, 190);
+			memset(connect_password, 0, 190);
+			memset(retry_ms, 0, 6);
+			enc_type[0]=0;
+			for(int i=0,j=0,connect_config=0;i<read_queue[0].tail;i++){
+				if(read_queue[0].buffer[i]==' '){
+					connect_config+=1;
+					j=0;
+				}
+				if(read_queue[0].buffer[i] != ' ' && connect_config==0 && i < 190){
+					connect_ssid[j++]=read_queue[0].buffer[i];
+				} else if(read_queue[0].buffer[i] != ' ' && connect_config==1 && i < 190+190){
+					connect_password[j++]=read_queue[0].buffer[i];
+				} else  if(read_queue[0].buffer[i] != ' ' && connect_config==2 && i < 190+190+6) {
+					retry_ms[j++]=read_queue[0].buffer[i];
+				} else if(i < 190+190+6+1) {
+					enc_type[0] = read_queue[0].buffer[i];
+				}
 			}
-			if(read_queue[0].buffer[i] != ' ' && connect_config==0){
-				connect_ssid[j++]=read_queue[0].buffer[i];
-			} else if(read_queue[0].buffer[i] != ' ' && connect_config==1){
-				connect_password[j++]=read_queue[0].buffer[i];
-			} else {
-				connect_sec=read_queue[0].buffer[i];
-			}
+			read_queue[0].tail=0;
 		}
-		read_queue[0].tail=0;
 		printline(3,(char *)read_queue[1].buffer,read_queue[1].tail);
 		read_queue[1].tail=0;
 		printline(4,(char *)read_queue[2].buffer,read_queue[2].tail);
@@ -151,6 +164,8 @@ int main(void)
 				printline(2,connect_ssid_decode,strlen(connect_ssid_decode));
 				hexDecode(connect_password, connect_password_decode);
 				printline(2,connect_password_decode,strlen(connect_password_decode));
+				printline(2,retry_ms,strlen(retry_ms));
+				printline(2,enc_type,1);
 				printline(2,"----------",10);
                 next_wifi_try = make_timeout_time_ms(10000);
             }
