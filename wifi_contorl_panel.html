@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- saved from url=(0038)https://whatwebcando.today/serial.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  <meta content="Can I rely on the Web Platform features to build my app? An overview of the device integration HTML5 APIs" name="description"> <meta content="width=device-width,initial-scale=1" name="viewport"> <!--<base href="/">--><base href="."> <link href="./wifi_contorl_panel_files/main.4188134553.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/index.1e803991.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/Article.15023632.css" rel="stylesheet"><link rel="stylesheet" href="./wifi_contorl_panel_files/[feature].html.d41938c2.css"><link rel="stylesheet" href="./wifi_contorl_panel_files/prism.3fa19f60.css"><h3>Support in your browser</h3> <div><div class="feature-test bg-success svelte-126eukc"><div class="pull-left svelte-126eukc"><code class="svelte-126eukc">navigator​.serial</code></div> <div class="pull-right svelte-126eukc">️✔ Supported</div> </div></div></section> <section><h3>Live Demo</h3> <div class="demo-placeholder svelte-126eukc"><style>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  <meta content="Can I rely on the Web Platform features to build my app? An overview of the device integration HTML5 APIs" name="description"> <meta content="width=device-width,initial-scale=1" name="viewport"> <!--<base href="/">--><base href="."> <link href="./wifi_contorl_panel_files/main.4188134553.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/index.1e803991.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/Article.15023632.css" rel="stylesheet"><link rel="stylesheet" href="./wifi_contorl_panel_files/[feature].html.d41938c2.css"><link rel="stylesheet" href="./wifi_contorl_panel_files/prism.3fa19f60.css"><h3>Support in your browser</h3> <div><div class="feature-test bg-success svelte-126eukc"><div class="pull-left svelte-126eukc"><code class="svelte-126eukc">navigator​.serial</code></div><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><div class="pull-right svelte-126eukc">️✔ Supported</div> </div></div></section> <section><h3>Live Demo</h3> <div class="demo-placeholder svelte-126eukc"><style>
             
             
           </style> <button id="connectButton">Connect via Serial Port</button>
@@ -10,7 +10,7 @@
 </div> </section>  </article></main>  </div>  <script id="oneOffScript" type="text/javascript">
 let database_of_wifi_scan = {};
 
-function renderTable(dataObject) {
+function renderTableAndGraph(dataObject) {
     const targetDiv = document.getElementById('target');
 
     // Create table element
@@ -26,27 +26,86 @@ function renderTable(dataObject) {
     // Create table body
     const tbody = document.createElement('tbody');
 
+    // Create arrays for Chart.js
+    const labels = [];
+    const rssiData = [];
+
     // Iterate through dataObject and create rows
     for (const ssid in dataObject) {
         const rowData = dataObject[ssid];
         const row = tbody.insertRow();
         row.innerHTML = `<td>${ssid}</td><td>${rowData.rssi.join(', ')}</td><td>${rowData.chan}</td><td>${rowData.mac.join(', ')}</td><td>${rowData.sec}</td>`;
+
+        // Add data for Chart.js
+        labels.push(ssid);
+        rssiData.push(rowData.rssi);
     }
 
     table.appendChild(tbody);
 
-    // Replace content of the targetDiv with the created table
+    // Append the created table to the targetDiv
     targetDiv.innerHTML = '';
     targetDiv.appendChild(table);
+
+    // Create and append the RSSI graph
+    const canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 200;
+    targetDiv.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    const rssiChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: rssiData.map((rssi, index) => ({
+                label: `RSSI - ${labels[index]}`,
+                data: rssi,
+                borderColor: getRandomColor(),
+                fill: false
+            }))
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: 'category',
+                    labels: labels
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'RSSI'
+                    }
+                }
+            }
+        }
+    });
 }
 
+function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
 
-function createOrUpdateObject(existingObject, extractedValues) {
+const macTracker = {};
+
+function createOrUpdateObject(existingObject, macTracker, extractedValues) {
     // Check if the ssid already exists in the object
     if (existingObject.hasOwnProperty(extractedValues.ssid)) {
         // If ssid exists, update the existing entry
         existingObject[extractedValues.ssid].rssi.push(extractedValues.rssi);
-        existingObject[extractedValues.ssid].mac.push(extractedValues.mac);
+
+        // Check uniqueness of MAC address before adding
+        if (!macTracker[extractedValues.mac]) {
+            existingObject[extractedValues.ssid].mac.push(extractedValues.mac);
+            macTracker[extractedValues.mac] = true;
+        }
     } else {
         // If ssid doesn't exist, create a new entry
         existingObject[extractedValues.ssid] = {
@@ -55,6 +114,9 @@ function createOrUpdateObject(existingObject, extractedValues) {
             mac: [extractedValues.mac],
             sec: extractedValues.sec
         };
+
+        // Track the MAC address
+        macTracker[extractedValues.mac] = true;
     }
 }
 
@@ -119,8 +181,8 @@ async function connectSerial() {
 		var extractedValues = extractValues(value)
 		if(extractedValues){
 			log.innerHTML += extractedValues.ssid + '<br>';
-			createOrUpdateObject(database_of_wifi_scan, extractedValues);
-			renderTable(database_of_wifi_scan);
+			createOrUpdateObject(database_of_wifi_scan, macTracker,  extractedValues);
+			renderTableAndGraph(database_of_wifi_scan);
 		}
       }
       if (done) {
