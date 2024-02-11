@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- saved from url=(0038)https://whatwebcando.today/serial.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  <meta content="Can I rely on the Web Platform features to build my app? An overview of the device integration HTML5 APIs" name="description"> <meta content="width=device-width,initial-scale=1" name="viewport"> <!--<base href="/">--><base href="."> <link href="./wifi_contorl_panel_files/main.4188134553.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/index.1e803991.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/Article.15023632.css" rel="stylesheet"><link rel="stylesheet" href="./wifi_contorl_panel_files/[feature].html.d41938c2.css"><link rel="stylesheet" href="./wifi_contorl_panel_files/prism.3fa19f60.css"><h3>Support in your browser</h3> <div><div class="feature-test bg-success svelte-126eukc"><div class="pull-left svelte-126eukc"><code class="svelte-126eukc">navigator​.serial</code></div><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><div class="pull-right svelte-126eukc">️✔ Supported</div> </div></div></section> <section><h3>Live Demo</h3> <div class="demo-placeholder svelte-126eukc"><style>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  <meta content="Can I rely on the Web Platform features to build my app? An overview of the device integration HTML5 APIs" name="description"> <meta content="width=device-width,initial-scale=1" name="viewport"> <!--<base href="/">--><base href="."> <link href="./wifi_contorl_panel_files/main.4188134553.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/index.1e803991.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/Article.15023632.css" rel="stylesheet"><link rel="stylesheet" href="./wifi_contorl_panel_files/[feature].html.d41938c2.css"><link rel="stylesheet" href="./wifi_contorl_panel_files/prism.3fa19f60.css"><h3>Support in your browser</h3> <div><div class="feature-test bg-success svelte-126eukc"><div class="pull-left svelte-126eukc"><code class="svelte-126eukc">navigator​.serial</code></div><div class="pull-right svelte-126eukc">️✔ Supported</div> </div></div></section> <section><h3>Live Demo</h3> <div class="demo-placeholder svelte-126eukc"><style>
             
             
           </style> <button id="connectButton">Connect via Serial Port</button>
@@ -46,42 +46,7 @@ function renderTableAndGraph(dataObject) {
     // Append the created table to the targetDiv
     targetDiv.innerHTML = '';
     targetDiv.appendChild(table);
-
-    // Create and append the RSSI graph
-    const canvas = document.createElement('canvas');
-    canvas.width = 400;
-    canvas.height = 200;
-    targetDiv.appendChild(canvas);
-
-    const ctx = canvas.getContext('2d');
-    const rssiChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: rssiData.map((rssi, index) => ({
-                label: `RSSI - ${labels[index]}`,
-                data: rssi,
-                borderColor: getRandomColor(),
-                fill: false
-            }))
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    type: 'category',
-                    labels: labels
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'RSSI'
-                    }
-                }
-            }
-        }
-    });
+	
 }
 
 function getRandomColor() {
