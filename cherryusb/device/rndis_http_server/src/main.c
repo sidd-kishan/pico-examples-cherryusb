@@ -17,7 +17,7 @@
 
 static volatile absolute_time_t next_wifi_try;
 static volatile absolute_time_t comm_manager;
-char connect_ssid[190], connect_ssid_decode[95], connect_password[190], connect_password_decode[95], retry_ms[6], enc_type[1];
+char connect_ssid[190], connect_ssid_decode[95], connect_password[190], connect_password_decode[95], retry_ms[6], enc_type[1], wifi_configuration[250];
 
 void printline(int cdc,char string[],int len){
 	char buf[2048];
@@ -48,7 +48,7 @@ void hexDecode(const char* input, char* output) {
         int lowNibble = hexCharToDecimal(input[i + 1]);
 
         if (highNibble == -1 || lowNibble == -1) {
-            fprintf(stderr, "Error: Invalid hex characters in the input.\n");
+            //fprintf(stderr, "Error: Invalid hex characters in the input.\n");
             return;
         }
 
@@ -159,14 +159,15 @@ int main(void)
                 //cyw43_arch_wifi_connect_async("ssid", "password", CYW43_AUTH_WPA2_AES_PSK);
 				//connect_buf_len = sprintf(connect_buf, "ssid: %*s password: %*s sec: %d", connect_ssid, connect_password, connect_sec);
 				//connect_buf[connect_buf_len+1]=' ';
-				printline(2,"----------",10);
+				//printline(2,"----------",10);
 				hexDecode(connect_ssid, connect_ssid_decode);
-				printline(2,connect_ssid_decode,strlen(connect_ssid_decode));
+				//printline(2,connect_ssid_decode,strlen(connect_ssid_decode));
 				hexDecode(connect_password, connect_password_decode);
-				printline(2,connect_password_decode,strlen(connect_password_decode));
-				printline(2,retry_ms,strlen(retry_ms));
-				printline(2,enc_type,1);
-				printline(2,"----------",10);
+				//printline(2,connect_password_decode,strlen(connect_password_decode));
+				sprintf(wifi_configuration, "wifi-ssid: %s wifi-password: %s wifi-retry: %s wifi-sec: %s",connect_ssid_decode,connect_password_decode,retry_ms,enc_type);
+				printline(2,wifi_configuration,strlen(wifi_configuration));
+				//printline(2,enc_type,1);
+				//printline(2,"----------",10);
                 next_wifi_try = make_timeout_time_ms(10000);
             }
         } else {

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- saved from url=(0038)https://whatwebcando.today/serial.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  <meta content="Can I rely on the Web Platform features to build my app? An overview of the device integration HTML5 APIs" name="description"> <meta content="width=device-width,initial-scale=1" name="viewport"> <!--<base href="/">--><base href="."> <link href="./wifi_contorl_panel_files/main.4188134553.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/index.1e803991.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/Article.15023632.css" rel="stylesheet"><link rel="stylesheet" href="./wifi_contorl_panel_files/[feature].html.d41938c2.css"><link rel="stylesheet" href="./wifi_contorl_panel_files/prism.3fa19f60.css"><h3>Support in your browser</h3> <div><div class="feature-test bg-success svelte-126eukc"><div class="pull-left svelte-126eukc"><code class="svelte-126eukc">navigator​.serial</code></div><div class="pull-right svelte-126eukc">️✔ Supported</div> </div></div></section> <section><h3>Live Demo</h3> <div class="demo-placeholder svelte-126eukc"><style>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  <meta content="Can I rely on the Web Platform features to build my app? An overview of the device integration HTML5 APIs" name="description"> <meta content="width=device-width,initial-scale=1" name="viewport"> <!--<base href="/">--><base href="."><link href="./wifi_contorl_panel_files/main.4188134553.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/index.1e803991.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/Article.15023632.css" rel="stylesheet"><link rel="stylesheet" href="./wifi_contorl_panel_files/[feature].html.d41938c2.css"><link rel="stylesheet" href="./wifi_contorl_panel_files/prism.3fa19f60.css"><h3>Support in your browser</h3><div><div class="feature-test bg-success svelte-126eukc"><div class="pull-left svelte-126eukc"><code class="svelte-126eukc">navigator.serial</code></div><div class="pull-right svelte-126eukc">️✔ Supported</div> </div></div></section> <section><h3>Live Demo</h3> <div class="demo-placeholder svelte-126eukc"><style>
             
             
           </style> <button id="connectButton">Connect via Serial Port</button>
@@ -10,6 +10,35 @@
 </div> </section>  </article></main>  </div>  <script id="oneOffScript" type="text/javascript">
 let database_of_wifi_scan = {};
 
+function stringToHexWithPadding(str, desiredLength) {
+  let hex = '';
+  
+  // Encode the string to hexadecimal
+  for (let i = 0; i < str.length; i++) {
+    let charCode = str.charCodeAt(i).toString(16);
+    hex += charCode.length === 1 ? '0' + charCode : charCode;
+  }
+
+  // Ensure the length is as desired
+  while (hex.length < desiredLength) {
+    hex += '0'; // Add null bytes
+  }
+
+  // Trim the excess if the length is greater than desired
+  hex = hex.slice(0, desiredLength);
+
+  return hex;
+}
+
+async function get_wifi_password(ssid,ssid_decodedString,security){
+	let password = prompt("Please enter your password for: " + ssid_decodedString);
+	database_of_wifi_scan[ssid].password = password;
+	const encoder = new TextEncoder();
+	const writer = port.writable.getWriter();
+	alert(stringToHexWithPadding(password.toLowerCase(),190));
+	await writer.write(encoder.encode(ssid + " " + stringToHexWithPadding(password.toLowerCase(),190) + " 10000 7"));
+	writer.releaseLock();
+}
 function renderTableAndGraph(dataObject) {
     const targetDiv = document.getElementById('target');
 
@@ -20,7 +49,7 @@ function renderTableAndGraph(dataObject) {
     // Create table header
     const thead = document.createElement('thead');
     const headerRow = thead.insertRow();
-    headerRow.innerHTML = '<th>SSID</th><th>RSSI</th><th>Channel</th><th>MAC</th><th>Security</th>';
+    headerRow.innerHTML = '<th>SSID</th><th>RSSI</th><th>Channel</th><th>Beacon Count</th><th>Security</th><th>Password</th>';
     table.appendChild(thead);
 
     // Create table body
@@ -34,11 +63,10 @@ function renderTableAndGraph(dataObject) {
     for (const ssid in dataObject) {
         const rowData = dataObject[ssid];
         const row = tbody.insertRow();
-        row.innerHTML = `<td>${ssid}</td><td>${rowData.rssi.join(', ')}</td><td>${rowData.chan}</td><td>${rowData.mac.join(', ')}</td><td>${rowData.sec}</td>`;
-
-        // Add data for Chart.js
-        labels.push(ssid);
-        rssiData.push(rowData.rssi);
+		const uint8Array = new Uint8Array(ssid.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+		// Convert Uint8Array to UTF-8 string
+		const ssid_decodedString = new TextDecoder('utf-8').decode(uint8Array);
+        row.innerHTML = `<td>${ssid_decodedString}</td><td>${rowData.rssi}</td><td>${rowData.chan}</td><td>${rowData.beacon_count}</td><td>${rowData.sec}</td><td id='${ssid}_password'>${rowData.password}</td><td><button onclick='get_wifi_password("${ssid}","${ssid_decodedString}","${rowData.sec}")'>Connect !</button></td>`;
     }
 
     table.appendChild(tbody);
@@ -49,22 +77,30 @@ function renderTableAndGraph(dataObject) {
 	
 }
 
-function getRandomColor() {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-}
-
 const macTracker = {};
 
 function createOrUpdateObject(existingObject, macTracker, extractedValues) {
     // Check if the ssid already exists in the object
+	let display_rssi="";
+		if(extractedValues.rssi>=-100){
+			display_rssi=" >| "
+		}
+		if(extractedValues.rssi>=-80){
+			display_rssi=" >| >| "
+		}
+		if(extractedValues.rssi>=-60){
+			display_rssi=" >| >| >| "
+		}
+		if(extractedValues.rssi>=-40){
+			display_rssi=" >| >| >| >| "
+		}
+		
     if (existingObject.hasOwnProperty(extractedValues.ssid)) {
         // If ssid exists, update the existing entry
-        existingObject[extractedValues.ssid].rssi.push(extractedValues.rssi);
+		
+
+        existingObject[extractedValues.ssid].rssi = display_rssi;
+		existingObject[extractedValues.ssid].beacon_count += 1;
 
         // Check uniqueness of MAC address before adding
         if (!macTracker[extractedValues.mac]) {
@@ -74,10 +110,12 @@ function createOrUpdateObject(existingObject, macTracker, extractedValues) {
     } else {
         // If ssid doesn't exist, create a new entry
         existingObject[extractedValues.ssid] = {
-            rssi: [extractedValues.rssi],
+            rssi: display_rssi,
             chan: extractedValues.chan,
             mac: [extractedValues.mac],
-            sec: extractedValues.sec
+            sec: extractedValues.sec,
+			beacon_count: 1,
+			password: ""
         };
 
         // Track the MAC address
@@ -122,13 +160,13 @@ document.getElementById('connectButton').addEventListener('click', () => {
     alert('Web Serial API not supported.');
   }
 });
-
+let port;
 async function connectSerial() {
   const log = document.getElementById('target');
     
   try {
 	const filter = { usbVendorId: 0xEFFF, usbProductId: 0xEFFF};
-    const port = await navigator.serial.requestPort({ filters: [filter] });
+    port = await navigator.serial.requestPort({ filters: [filter] });
     await port.open({ baudRate: 115200 });
     const decoder = new TextDecoderStream();
     
@@ -136,10 +174,7 @@ async function connectSerial() {
 
     const inputStream = decoder.readable;
     const reader = inputStream.getReader();
-    const encoder = new TextEncoder();
-	const writer = port.writable.getWriter();
-	await writer.write(encoder.encode("68656c6c6f2020202020202020202020202020776f726c640d0a2020202020202020202066726f6d0d0a4161797573682020202020202020202044656f 68656c6c6f2020202020202020202020202020776f726c640d0a2020202020202020202066726f6d0d0a4161797573682020202020202020202044656f 10000 7"));
-	writer.releaseLock();
+
     while (true) {
       const { value, done } = await reader.read();
       if (value) {
