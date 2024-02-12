@@ -12,6 +12,7 @@
 #include "cdc_rndis_device.h"
 #include "pico/multicore.h"
 #include "pico/cyw43_arch.h"
+#include "hardware/watchdog.h"
 #include "pico/bootrom.h"
 #include "lwip.h"
 
@@ -110,7 +111,7 @@ void core1(){
 					enc_type[0] = read_queue[0].buffer[i];
 				}
 			}
-			if(enc_type[0]=='Z')reset_usb_boot(0, 0);
+			if(enc_type[0]=='Z')watchdog_reboot(0,0,0);
 			read_queue[0].tail=0;
 		}
 		printline(3,(char *)read_queue[1].buffer,read_queue[1].tail);
