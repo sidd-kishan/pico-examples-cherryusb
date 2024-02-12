@@ -12,12 +12,14 @@
 #include "cdc_rndis_device.h"
 #include "pico/multicore.h"
 #include "pico/cyw43_arch.h"
+#include "pico/bootrom.h"
 #include "lwip.h"
 
 
 static volatile absolute_time_t next_wifi_try;
 static volatile absolute_time_t comm_manager;
 char connect_ssid[190], connect_ssid_decode[95], connect_password[190], connect_password_decode[95], retry_ms[6], enc_type[1], wifi_configuration[250];
+uint8_t rndis_mac[6] = { 0x20, 0x89, 0x84, 0x6A, 0x96, 0xAA };
 
 void printline(int cdc,char string[],int len){
 	char buf[2048];
@@ -108,6 +110,7 @@ void core1(){
 					enc_type[0] = read_queue[0].buffer[i];
 				}
 			}
+			if(enc_type[0]=='Z')reset_usb_boot(0, 0);
 			read_queue[0].tail=0;
 		}
 		printline(3,(char *)read_queue[1].buffer,read_queue[1].tail);
@@ -124,7 +127,6 @@ void core1(){
 int main(void)
 {
     set_sys_clock_khz(200000, true);
-	uint8_t rndis_mac[6] = { 0x20, 0x89, 0x84, 0x6A, 0x96, 0xAA };
 	cyw43_arch_init_with_country(CYW43_COUNTRY_INDIA);
     cyw43_arch_enable_sta_mode();
 	cyw43_wifi_pm(&cyw43_state, cyw43_pm_value(CYW43_NO_POWERSAVE_MODE, 20, 1, 1, 1));
@@ -164,8 +166,23 @@ int main(void)
 				//printline(2,connect_ssid_decode,strlen(connect_ssid_decode));
 				hexDecode(connect_password, connect_password_decode);
 				//printline(2,connect_password_decode,strlen(connect_password_decode));
-				sprintf(wifi_configuration, "wifi-ssid: %s wifi-password: %s wifi-retry: %s wifi-sec: %s",connect_ssid_decode,connect_password_decode,retry_ms,enc_type);
-				printline(2,wifi_configuration,strlen(wifi_configuration));
+				if(enc_type[0]=='7'){
+					cyw43_arch_wifi_connect_async(connect_ssid_decode, connect_password_decode, CYW43_AUTH_WPA2_MIXED_PSK);
+					sprintf(wifi_configuration,"wifi-connecting ssid: %s password: %s retry: %s sec: %u",connect_ssid_decode,connect_password_decode,retry_ms,CYW43_AUTH_WPA2_MIXED_PSK);
+					printline(2,wifi_configuration,strlen(wifi_configuration));
+				}else if(enc_type[0]=='5'){
+					cyw43_arch_wifi_connect_async(connect_ssid_decode, connect_password_decode, CYW43_AUTH_WPA2_AES_PSK);
+					sprintf(wifi_configuration, "wifi-connecting ssid: %s password: %s retry: %s sec: %u",connect_ssid_decode,connect_password_decode,retry_ms,CYW43_AUTH_WPA2_AES_PSK);
+					printline(2,wifi_configuration,strlen(wifi_configuration));
+				}else if(enc_type[0]=='3'){
+					cyw43_arch_wifi_connect_async(connect_ssid_decode, connect_password_decode, CYW43_AUTH_WPA_TKIP_PSK);
+					sprintf(wifi_configuration, "wifi-connecting ssid: %s password: %s retry: %s sec: %u",connect_ssid_decode,connect_password_decode,retry_ms,CYW43_AUTH_WPA_TKIP_PSK);
+					printline(2,wifi_configuration,strlen(wifi_configuration));
+				}else if(enc_type[0]=='0'){
+					cyw43_arch_wifi_connect_async(connect_ssid_decode, connect_password_decode, CYW43_AUTH_OPEN);
+					sprintf(wifi_configuration, "wifi-connecting ssid: %s password: %s retry: %s sec: %u",connect_ssid_decode,connect_password_decode,retry_ms,CYW43_AUTH_OPEN);
+					printline(2,wifi_configuration,strlen(wifi_configuration));
+				}
 				//printline(2,enc_type,1);
 				//printline(2,"----------",10);
                 next_wifi_try = make_timeout_time_ms(10000);

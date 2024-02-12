@@ -21,3 +21,4 @@ add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c ${CMAKE_CU
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pico_stdlib cherryusblib hardware_resets hardware_irq pico_lwip pico_multicore pico_cyw43_arch_none)
 pico_add_extra_outputs(${PROJECT_NAME})
+target_compile_definitions(${PROJECT_NAME} PRIVATE PICO_ENTER_USB_BOOT_ON_EXIT=1 CYW43_SLEEP_CHECK_MS=3)

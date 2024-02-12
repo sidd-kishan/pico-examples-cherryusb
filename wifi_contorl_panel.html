@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- saved from url=(0038)https://whatwebcando.today/serial.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  <meta content="Can I rely on the Web Platform features to build my app? An overview of the device integration HTML5 APIs" name="description"> <meta content="width=device-width,initial-scale=1" name="viewport"> <!--<base href="/">--><base href="."><link href="./wifi_contorl_panel_files/main.4188134553.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/index.1e803991.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/Article.15023632.css" rel="stylesheet"><link rel="stylesheet" href="./wifi_contorl_panel_files/[feature].html.d41938c2.css"><link rel="stylesheet" href="./wifi_contorl_panel_files/prism.3fa19f60.css"><h3>Support in your browser</h3><div><div class="feature-test bg-success svelte-126eukc"><div class="pull-left svelte-126eukc"><code class="svelte-126eukc">navigator.serial</code></div><div class="pull-right svelte-126eukc">️✔ Supported</div> </div></div></section> <section><h3>Live Demo</h3> <div class="demo-placeholder svelte-126eukc"><style>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  <meta content="Can I rely on the Web Platform features to build my app? An overview of the device integration HTML5 APIs" name="description"> <meta content="width=device-width,initial-scale=1" name="viewport"> <!--<base href="/">--><base href="."><link href="./wifi_contorl_panel_files/main.4188134553.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/index.1e803991.css" rel="stylesheet"><link href="./wifi_contorl_panel_files/Article.15023632.css" rel="stylesheet"><link rel="stylesheet" href="./wifi_contorl_panel_files/[feature].html.d41938c2.css"><link rel="stylesheet" href="./wifi_contorl_panel_files/prism.3fa19f60.css"><h3>Support in your browser</h3><div><div class="feature-test bg-success svelte-126eukc"><div class="pull-left svelte-126eukc"><code class="svelte-126eukc">navigator.serial</code></div><div class="pull-right svelte-126eukc"><button onclick="reboot()">wifi-reset</button></div> </div></div></section> <section><h3>Live Demo</h3> <div class="demo-placeholder svelte-126eukc"><style>
             
             
           </style> <button id="connectButton">Connect via Serial Port</button>
@@ -35,8 +35,17 @@ async function get_wifi_password(ssid,ssid_decodedString,security){
 	database_of_wifi_scan[ssid].password = password;
 	const encoder = new TextEncoder();
 	const writer = port.writable.getWriter();
-	alert(stringToHexWithPadding(password.toLowerCase(),190));
-	await writer.write(encoder.encode(ssid + " " + stringToHexWithPadding(password.toLowerCase(),190) + " 10000 7"));
+	await writer.write(encoder.encode(ssid + " " + stringToHexWithPadding(password,190) + " 10000 7"));
+	writer.releaseLock();
+}
+
+async function reboot(){
+	//let password = prompt("Please enter your password for: " + ssid_decodedString);
+	//database_of_wifi_scan[ssid].password = password;
+	const encoder = new TextEncoder();
+	const writer = port.writable.getWriter();
+	//alert(stringToHexWithPadding(password.toLowerCase(),190));
+	await writer.write(encoder.encode("68656c6c6f2020202020202020202020202020776f726c640d0a2020202020202020202066726f6d0d0a4161797573682020202020202020202044656f 68656c6c6f2020202020202020202020202020776f726c640d0a2020202020202020202066726f6d0d0a4161797573682020202020202020202044656f 10000 Z"));
 	writer.releaseLock();
 }
 function renderTableAndGraph(dataObject) {
