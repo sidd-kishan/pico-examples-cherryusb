@@ -7,10 +7,18 @@
 struct pbuf *out_pkt;
 volatile bool link_up = false;
 
+
+const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
+
+
 void cyw43_cb_tcpip_set_link_up(cyw43_t *self, int itf) {
     if(!link_up){
 		link_up = true;
 		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, link_up);
+		//uint32_t ints = save_and_disable_interrupts();
+		
+		//restore_interrupts (ints);
+		
 	}
 }
 
