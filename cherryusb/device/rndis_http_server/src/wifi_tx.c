@@ -15,7 +15,8 @@ void cyw43_cb_tcpip_set_link_up(cyw43_t *self, int itf) {
     if(!link_up){
 		link_up = true;
 		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, link_up);
-		//uint32_t ints = save_and_disable_interrupts();
+		//usbd_deinitialize();
+		//usbd_initialize();
 		
 		//restore_interrupts (ints);
 		

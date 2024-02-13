@@ -30,13 +30,25 @@ function stringToHexWithPadding(str, desiredLength) {
   return hex;
 }
 
+function remove_non_ascii(str) {
+  
+  if ((str===null) || (str===''))
+       return false;
+ else
+   str = str.toString();
+  
+  return str.replace(/[^\x20-\x7E]/g, '');
+}
+
+
 async function get_wifi_password(ssid,ssid_decodedString,security){
+	ssid_decodedString = remove_non_ascii(ssid_decodedString);
 	let password = prompt("Please enter your password for: " + ssid_decodedString);
 	database_of_wifi_scan[ssid].password = password;
 	const encoder = new TextEncoder();
 	const writer = port.writable.getWriter();
 	await writer.write(encoder.encode(ssid + " " + stringToHexWithPadding(password,190) + " 10000 "+security));
-	alert((ssid + " " + stringToHexWithPadding(password,190) + " 10000 "+security));
+	//alert((ssid + " " + stringToHexWithPadding(password,190) + " 10000 "+security));
 	writer.releaseLock();
 }
 
@@ -46,7 +58,7 @@ async function soft_reboot(){
 	const encoder = new TextEncoder();
 	const writer = port.writable.getWriter();
 	//alert(stringToHexWithPadding(password.toLowerCase(),190));
-	await writer.write(encoder.encode("68656c6c6f 68656c6c6f 10000 Y"));
+	await writer.write(encoder.encode("\r\n68656c6c6f 68656c6c6f 10000 Y"));
 	writer.releaseLock();
 }
 
@@ -56,7 +68,7 @@ async function hard_reboot(){
 	const encoder = new TextEncoder();
 	const writer = port.writable.getWriter();
 	//alert(stringToHexWithPadding(password.toLowerCase(),190));
-	await writer.write(encoder.encode("68656c6c6f 68656c6c6f 10000 Z"));
+	await writer.write(encoder.encode("\r\n68656c6c6f 68656c6c6f 10000 Z"));
 	writer.releaseLock();
 }
 function renderTableAndGraph(dataObject) {
@@ -144,6 +156,10 @@ function createOrUpdateObject(existingObject, macTracker, extractedValues) {
 }
 let leftover="";
 function extractValues(inputString) {
+	//if(inputString.indexOf("_a") !== -1){
+	//	document.getElementById("console_log").innerHTML += leftover+"<br>";
+	//	return 0;
+	//}
     // Define a regular expression pattern to extract values
     const pattern = /ssid:\s*([\w\s]+)\s*rssi:\s*(-?\d+)\s*chan:\s*(\d+)\s*mac:\s*([\w:]+)\s*sec:\s*(\d+)/;
 
@@ -176,7 +192,7 @@ function extractValues(inputString) {
 			leftover = leftover.substr(leftover.indexOf("ssid:"),leftover.lastIndexOf("ssid:"));
 			let ex_fields = extractValues(leftover);
 			if(ex_fields === undefined) {
-				document.getElementById("console_log").innerHTML += leftover+"<br>";
+				//document.getElementById("console_log").innerHTML += leftover+"<br>";
 			}
 			else {
 				createOrUpdateObject(database_of_wifi_scan, macTracker, ex_fields );
