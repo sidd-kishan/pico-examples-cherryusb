@@ -7,6 +7,7 @@
 
 #include "usbd_core.h"
 #include "usbd_rndis.h"
+#include "usbd_cdc.h"
 
 /*!< endpoint address */
 #define CDC_IN_EP  0x81
