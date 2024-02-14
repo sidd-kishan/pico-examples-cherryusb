@@ -5,27 +5,41 @@
 #include "usbd_rndis.h"
 
 struct pbuf *out_pkt;
-volatile bool link_up = false;
+int link_up = 0;
 
 
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
 
 void cyw43_cb_tcpip_set_link_up(cyw43_t *self, int itf) {
-    if(!link_up){
-		link_up = true;
+    if(link_up==0){
+		link_up+=1;
+		uint8_t* myDataAsBytes = (uint8_t*) wifi_configuration;
+		int myDataSize = sizeof(wifi_configuration);
+		
+		int writeSize = (myDataSize / FLASH_PAGE_SIZE) + 1; // how many flash pages we're gonna need to write
+		int sectorCount = ((writeSize * FLASH_PAGE_SIZE) / FLASH_SECTOR_SIZE) + 1; // how many flash sectors we're gonna need to erase
+			
+		//printf("Programming flash target region...\n");
+
+		uint32_t interrupts = save_and_disable_interrupts();
+		
+		multicore_lockout_start_blocking();
+		
+		flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE * sectorCount);
+		flash_range_program(FLASH_TARGET_OFFSET, myDataAsBytes, FLASH_PAGE_SIZE * writeSize);
+		
+		multicore_lockout_end_blocking();
+		
+		restore_interrupts(interrupts);
+		
 		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, link_up);
-		//usbd_deinitialize();
-		//usbd_initialize();
-		
-		//restore_interrupts (ints);
-		
 	}
 }
 
 void cyw43_cb_tcpip_set_link_down(cyw43_t *self, int itf) {
     if(link_up){
-		link_up = false;
+		link_up = 0;
 		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, link_up);
 	}
 }

@@ -84,7 +84,7 @@ static int scan_result(void *env, const cyw43_ev_scan_result_t *result) {
 void core1(){
     //user_init_lwip();
     lwip_init();
-	
+	multicore_lockout_victim_init();
     while(true) {
         /**/
 		//printline(2,(char *)read_queue[0].buffer,read_queue[0].tail);
@@ -137,6 +137,7 @@ int main(void)
     cyw43_arch_enable_sta_mode();
 	cyw43_wifi_pm(&cyw43_state, cyw43_pm_value(CYW43_NO_POWERSAVE_MODE, 20, 1, 1, 1));
 	cyw43_hal_get_mac(0, rndis_mac);
+	memcpy(&wifi_configuration, flash_target_contents, sizeof(wifi_configuration));
 
     cdc_rndis_init(rndis_mac);
 	
@@ -203,10 +204,6 @@ int main(void)
                 next_wifi_try = make_timeout_time_ms(10000);
             }
         } else {
-			if (absolute_time_diff_us(get_absolute_time(), next_wifi_try) < 0) {
-				printline(2,wifi_configuration,wifi_congfig_len-1);
-				next_wifi_try = make_timeout_time_ms(1000);
-			}
 			struct pbuf *p;
 			p = usbd_rndis_eth_rx();
 			if (p != NULL) {
@@ -219,8 +216,11 @@ int main(void)
 			//if(link_up){
 		//}
 		}
+		if (absolute_time_diff_us(get_absolute_time(), next_wifi_try) < 0) {
+			printline(2,wifi_configuration,450);
+			next_wifi_try = make_timeout_time_ms(1000);
+		}
     }
-
     return 0;
 }
 
