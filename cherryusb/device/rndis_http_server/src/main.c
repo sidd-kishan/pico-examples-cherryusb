@@ -85,6 +85,7 @@ void core1(){
     //user_init_lwip();
     lwip_init();
 	multicore_lockout_victim_init();
+	int wifi_conn_error;
     while(true) {
         /**/
 		//printline(2,(char *)read_queue[0].buffer,read_queue[0].tail);
@@ -117,8 +118,12 @@ void core1(){
 						enc_type[0] = read_queue[0].buffer[i];
 					}
 				}
-				if(enc_type[0]=='Y')watchdog_reboot(0,0,0);
-				if(enc_type[0]=='Z')reset_usb_boot(0, 0);
+				if(enc_type[0]=='X') {
+					wifi_conn_error = cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA);
+					wifi_congfig_len = sprintf(wifi_configuration,"s_a: %s p_a: %s r_a: %s c_a: %s ",connect_ssid,connect_password,retry_ms,enc_type);
+				}
+				else if(enc_type[0]=='Y') watchdog_reboot(0,0,0);
+				else if(enc_type[0]=='Z') reset_usb_boot(0, 0);
 				read_queue[0].tail=0;
 			}
 			printline(3,(char *)read_queue[1].buffer,read_queue[1].tail);
@@ -133,11 +138,13 @@ void core1(){
 int main(void)
 {
     set_sys_clock_khz(200000, true);
+	memcpy(&wifi_configuration, flash_target_contents, sizeof(wifi_configuration));
+	sscanf(wifi_configuration,"s_a: %s p_a: %s r_a: %s c_a: %s ",connect_ssid,connect_password,retry_ms,enc_type);
 	cyw43_arch_init_with_country(CYW43_COUNTRY_INDIA);
     cyw43_arch_enable_sta_mode();
 	cyw43_wifi_pm(&cyw43_state, cyw43_pm_value(CYW43_NO_POWERSAVE_MODE, 20, 1, 1, 1));
 	cyw43_hal_get_mac(0, rndis_mac);
-	memcpy(&wifi_configuration, flash_target_contents, sizeof(wifi_configuration));
+	//sscanf(wifi_configuration,"s_a: %s p_a: %s r_a: %s c_a: %s ",connect_ssid,connect_password,retry_ms,enc_type);
 
     cdc_rndis_init(rndis_mac);
 	
@@ -218,7 +225,7 @@ int main(void)
 		}
 		if (absolute_time_diff_us(get_absolute_time(), next_wifi_try) < 0) {
 			printline(2,wifi_configuration,450);
-			next_wifi_try = make_timeout_time_ms(1000);
+			next_wifi_try = make_timeout_time_ms(2000);
 		}
     }
     return 0;
