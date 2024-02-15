@@ -10,16 +10,12 @@
 #include "usbd_core.h"
 #include "usbd_rndis.h"
 #include "cdc_rndis_device.h"
-#include "pico/multicore.h"
-#include "pico/cyw43_arch.h"
-#include "hardware/watchdog.h"
-#include "pico/bootrom.h"
 #include "lwip.h"
 
 
 static volatile absolute_time_t next_wifi_try;
 static volatile absolute_time_t comm_manager;
-char connect_ssid[190], connect_ssid_decode[95], connect_password[190], connect_password_decode[95], retry_ms[6], enc_type[1], wifi_configuration[450];
+char connect_ssid[190], connect_ssid_decode[95], connect_password[190], connect_password_decode[95], retry_ms[6], enc_type[1], wifi_configuration[450], wifi_configuration_last[450];
 uint8_t rndis_mac[6] = { 0x20, 0x89, 0x84, 0x6A, 0x96, 0xAA };
 int wifi_congfig_len=0;
 
@@ -138,7 +134,10 @@ void core1(){
 int main(void)
 {
     set_sys_clock_khz(200000, true);
-	memcpy(&wifi_configuration, flash_target_contents, sizeof(wifi_configuration));
+	memset(wifi_configuration_last,0,450);
+	memset(wifi_configuration,0,450);
+	memcpy(wifi_configuration, flash_target_contents, sizeof(wifi_configuration));
+	memcpy(wifi_configuration_last,wifi_configuration,450);
 	sscanf(wifi_configuration,"s_a: %s p_a: %s r_a: %s c_a: %s ",connect_ssid,connect_password,retry_ms,enc_type);
 	cyw43_arch_init_with_country(CYW43_COUNTRY_INDIA);
     cyw43_arch_enable_sta_mode();
@@ -222,10 +221,6 @@ int main(void)
 			}
 			//if(link_up){
 		//}
-		}
-		if (absolute_time_diff_us(get_absolute_time(), next_wifi_try) < 0) {
-			printline(2,wifi_configuration,450);
-			next_wifi_try = make_timeout_time_ms(2000);
 		}
     }
     return 0;

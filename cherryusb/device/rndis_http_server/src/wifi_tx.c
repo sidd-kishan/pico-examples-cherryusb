@@ -5,15 +5,15 @@
 #include "usbd_rndis.h"
 
 struct pbuf *out_pkt;
-int link_up = 0;
+bool link_up = false;
 
 
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
 
 void cyw43_cb_tcpip_set_link_up(cyw43_t *self, int itf) {
-    if(link_up==0){
-		link_up+=1;
+    if(link_up==0 && (memcmp(wifi_configuration_last, wifi_configuration, 450))!=0){
+		link_up=1;
 		uint8_t* myDataAsBytes = (uint8_t*) wifi_configuration;
 		int myDataSize = sizeof(wifi_configuration);
 		
@@ -34,11 +34,15 @@ void cyw43_cb_tcpip_set_link_up(cyw43_t *self, int itf) {
 		restore_interrupts(interrupts);
 		
 		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, link_up);
+		watchdog_reboot(0,0,0);
+	} else if(link_up==0){
+		link_up=1;
+		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, link_up);
 	}
 }
 
 void cyw43_cb_tcpip_set_link_down(cyw43_t *self, int itf) {
-    if(link_up){
+    if(link_up && enc_type[0]=='X'){
 		link_up = 0;
 		uint8_t* myDataAsBytes = (uint8_t*) wifi_configuration;
 		int myDataSize = sizeof(wifi_configuration);
@@ -58,6 +62,10 @@ void cyw43_cb_tcpip_set_link_down(cyw43_t *self, int itf) {
 		multicore_lockout_end_blocking();
 		
 		restore_interrupts(interrupts);
+		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, link_up);
+		watchdog_reboot(0,0,0);
+	} else if(link_up){
+		link_up = 0;
 		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, link_up);
 	}
 }
