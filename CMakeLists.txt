@@ -20,7 +20,9 @@ set(PICO_LWIP_CORE_CODE ${PICO_EXAMPLES_PATH}/pico-sdk/lib/lwip/src/core/)
 pico_sdk_init()
 
 include(example_auto_set_url.cmake)
-
+#set(HW_RESETS_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2_common/hardware_resets/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2040/hardware_structs/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2_common/hardware_base/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2040/hardware_regs/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/host/hardware_irq/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/common/pico_stdlib_headers/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2_common/pico_stdio/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/common/pico_time/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2_common/hardware_timer/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2_common/hardware_gpio/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2_common/hardware_uart/include)
+set(HW_RESETS_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2_common/hardware_resets/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2040/hardware_structs/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2_common/hardware_base/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2040/hardware_regs/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/host/hardware_irq/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2040/pico_platform/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/rp2_common/pico_platform_compiler/include ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/common/pico_base_headers/include)
+set(PICO_H_REQUIRED ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/src/boards/include/boards/)
 set(LWIP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pico-sdk/lib/lwip)
 set (LWIP_INCLUDE_DIRS
     "${LWIP_DIR}/src/include"

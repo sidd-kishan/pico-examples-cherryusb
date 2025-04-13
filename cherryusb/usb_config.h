@@ -6,9 +6,17 @@
 #ifndef CHERRYUSB_CONFIG_H
 #define CHERRYUSB_CONFIG_H
 
-#define CHERRYUSB_VERSION 0x000700
-
+//#define CHERRYUSB_VERSION 0x000700
+#define PICO_RP2040 1
 /* ================ USB common Configuration ================ */
+#include<pico.h>
+#include "hardware/regs/addressmap.h"
+#include "hardware/structs/resets.h"
+#include "pico/platform.h"
+typedef unsigned int uint;
+
+#define CONFIG_USBDEV_MAX_BUS 1
+#define CONFIG_USBDEV_EP_NUM 16
 
 #define CONFIG_USB_PRINTF(...) printf(__VA_ARGS__)
 

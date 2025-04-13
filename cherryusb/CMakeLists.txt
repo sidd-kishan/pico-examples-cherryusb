@@ -25,16 +25,19 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}
 	${CMAKE_CURRENT_LIST_DIR}/device/rndis_http_server/src
 	#arch/cc.h ke liye:-
 	${CMAKE_CURRENT_LIST_DIR}/device/rndis_http_server/common
+	#for latest cherryusb and pico-sdk
+	${HW_RESETS_INCLUDE}
+	${PICO_H_REQUIRED}
 )
 
 
 add_library(cherryusblib STATIC)
 target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/port/rp2040/usb_dc_rp2040.c)
 #target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/audio/usbd_audio.c)
-target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/cdc/usbd_cdc.c)
+target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/cdc/usbd_cdc_acm.c)
 #target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/dfu/usbd_dfu.c)
 #target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/hid/usbd_hid.c)
-target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/msc/usbd_msc.c)
+#target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/msc/usbd_msc.c)
 #target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/mtp/usbd_mtp.c)
 #target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/printer/usbd_printer.c)
 #target_sources(cherryusblib PRIVATE ${CMAKE_CURRENT_LIST_DIR}/CherryUSB/class/video/usbd_video.c)
